@@ -7,20 +7,27 @@ import {Image, ImageBackground, Text, View} from "react-native";
 const TabIcon = ({ focused, icon, title } : any) => {
     if (focused) {
         return (
-            <ImageBackground
-                source={images.highlight}
-                className="flex flex-row w-full flex-1 min-w-[112px] min-h-16
-                mt-4  justify-center items-center rounded-full overflow-hidden"
-            >
-                <Image source={icon}
-                       tintColor="#151312" className="size-5" />
-                <Text className="text-secondary text-base font-semibold ml-2">{title}</Text>
-            </ImageBackground>
+            <View className="flex-1 justify-center items-center">
+                <ImageBackground
+                    source={images.highlight}
+                    className="flex flex-row justify-center items-center rounded-full overflow-hidden"
+                    style={{ 
+                        paddingHorizontal: 16, 
+                        paddingVertical: 8, 
+                        minWidth: 80,
+                        height: 50
+                    }}
+                >
+                    <Image source={icon}
+                           tintColor="#151312" className="size-5" />
+                    <Text className="text-secondary text-sm font-semibold ml-2">{title}</Text>
+                </ImageBackground>
+            </View>
         )
     }
 
     return (
-        <View className="size-full justify-center items-center mt-4 rounded-full">
+        <View className="flex-1 justify-center items-center">
             <Image source={icon}
                 tintColor="#A8B5DB" className="size-5"
             />
@@ -34,23 +41,24 @@ const _Layout = () => {
             screenOptions={{
                 tabBarShowLabel: false,
                 tabBarItemStyle: {
-                    width: "100%",
-                    height: "100%",
+                    flex: 1,
                     justifyContent: "center",
                     alignItems: "center",
-                    bottom: -3.1
+                    backgroundColor: "transparent",
+                    height: 52, // Match tab bar height
+                    paddingVertical: 8, // Add vertical padding for better alignment
                 },
                 tabBarStyle: {
                     backgroundColor: "#0f0d23",
                     borderRadius: 50,
                     marginHorizontal: 20,
-                    marginBottom: 70,
+                    marginBottom: 40,
                     height: 52,
                     position: "absolute",
                     overflow: "hidden",
                     borderWidth: 0.1,
                     borderColor: "0f0d23",
-
+                    
                 }
             }}
         >
@@ -106,20 +114,6 @@ const _Layout = () => {
                             focused={focused}
                             icon={icons.person}
                             title="Profile"
-                        />
-                    )
-                }}
-            />
-            <Tabs.Screen
-                name="movies/[id]"
-                options={{
-                    title: "movies/[id]",
-                    headerShown: false,
-                    tabBarIcon: ({ focused }) => (
-                        <TabIcon
-                            focused={focused}
-                            icon={icons.person}
-                            title="movies/[id]"
                         />
                     )
                 }}

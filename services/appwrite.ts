@@ -50,14 +50,45 @@ export const updateSearchCount = async (query: string, movie: Movie) => {
 
 export const getTrendingMovies = async(): Promise<TrendingMovie[] | undefined> => {
     try {
+        console.log('Fetching trending movies from Appwrite...');
+        console.log('Database ID:', DATABASE_ID);
+        console.log('Collection ID:', COLLECTION_ID);
+        
+        // Check if Appwrite client is properly initialized
+        if (!database) {
+            console.error('Appwrite database client not initialized');
+            return [];
+        }
+        
         const result = await database.listDocuments(DATABASE_ID, COLLECTION_ID, [
             Query.limit(5),
             Query.orderDesc('count'),
         ])
 
+        console.log('Appwrite result:', {
+            total: result.total,
+            documentsLength: result.documents.length,
+            documents: result.documents
+        });
+
+        // Return empty array if no documents found, instead of undefined
+        if (!result.documents || result.documents.length === 0) {
+            console.log('No trending movies found in database');
+            return [];
+        }
+
         return result.documents as unknown as TrendingMovie[];
     } catch (error) {
-        console.log(error);
-        return undefined;
+        console.log('Error fetching trending movies:', error);
+        
+        // More detailed error logging
+        if (error instanceof Error) {
+            console.log('Error name:', error.name);
+            console.log('Error message:', error.message);
+            console.log('Error stack:', error.stack);
+        }
+        
+        // Return empty array instead of undefined on error
+        return [];
     }
 }

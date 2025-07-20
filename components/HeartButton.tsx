@@ -10,11 +10,33 @@ const HeartButton = () => {
     }
 
     return (
-        <TouchableOpacity onPress={handleLike}>
+        <TouchableOpacity 
+            onPress={handleLike}
+            style={{ 
+                position: 'absolute',
+                right: 16,
+                top: 16,
+                zIndex: 1
+            }}
+        >
             {isLiked ? (
-                <Image source={(icons.heart)} className="w-8 h-8 ml-[22rem]" />
+                <Image 
+                    source={icons.heart} 
+                    style={{ 
+                        width: 32, 
+                        height: 32 
+                    }}
+                    resizeMode="contain"
+                />
                 ) : (
-                <Image source={(icons.heart2)} className="w-8 h-8 ml-[22rem]" />
+                <Image 
+                    source={icons.heart2} 
+                    style={{ 
+                        width: 32, 
+                        height: 32 
+                    }}
+                    resizeMode="contain"
+                />
             )}
         </TouchableOpacity>
     );
