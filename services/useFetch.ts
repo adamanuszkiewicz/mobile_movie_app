@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
 
-const uesFetch = <T>(fetchFunction: () => Promise<T>, autoFetch = true) => {
+const useFetch = <T>(fetchFunction: () => Promise<T>, autoFetch = true) => {
     const [data, setData] = useState<T | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<Error | null>(null);
@@ -9,11 +9,14 @@ const uesFetch = <T>(fetchFunction: () => Promise<T>, autoFetch = true) => {
         try {
             setLoading(true);
             setError(null)
-
+            
+            console.log('useFetch: Starting fetch operation');
             const result = await fetchFunction();
+            console.log('useFetch: Fetch completed successfully', result);
 
             setData(result);
         }   catch (err) {
+            console.log('useFetch: Fetch error', err);
             //@ts-ignore
             setError(err instanceof Error ? err : new Error('An error occurred'));
         }   finally {
@@ -28,12 +31,13 @@ const uesFetch = <T>(fetchFunction: () => Promise<T>, autoFetch = true) => {
     }
 
     useEffect(() => {
+        console.log('useFetch: useEffect triggered, autoFetch:', autoFetch);
         if (autoFetch) {
             fetchData();
         }
-    }, []);
-    //@ts-ignore
+    }, [autoFetch]);
+    
     return { data, error, loading, refetch: fetchData, reset };
 }
 
-export default uesFetch
+export default useFetch

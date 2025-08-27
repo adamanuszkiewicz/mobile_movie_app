@@ -1,8 +1,7 @@
 import {View, Text, Image, FlatList, ActivityIndicator} from "react-native"
 import React, {useEffect, useState} from 'react'
 import {images} from "@/constants/images";
-import useFetch from "@/services/useFetch";
-import {fetchMovies} from "@/services/api";
+import {fetchMovies, testTMDBConnection} from "@/services/api";
 import MovieCard from "@/components/MovieCard";
 import {icons} from "@/constants/icons";
 import SearchBar from "@/components/SearchBar";
@@ -10,16 +9,41 @@ import {updateSearchCount} from "@/services/appwrite";
 
 const Search = () => {
     const [searchQuery , setSearchQuery] = useState('');
+    const [mounted, setMounted] = useState(false);
+    
+    // Manual state management instead of useFetch
+    const [movies, setMovies] = useState<any[] | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<Error | null>(null);
 
-    const {
-        data: movies,
-        loading,
-        error,
-        refetch: loadMovies,
-        reset,
-    } = useFetch(() => fetchMovies({
-        query: searchQuery
-    }), false)
+    // Ensure component is mounted before running effects
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // Test API connection on component mount
+    useEffect(() => {
+        testTMDBConnection();
+    }, []);
+
+    const loadMovies = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const moviesData = await fetchMovies({ query: searchQuery });
+            setMovies(moviesData || []);
+        } catch (err) {
+            setError(err as Error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const reset = () => {
+        setMovies(null);
+        setLoading(false);
+        setError(null);
+    };
 
     useEffect(() => {
         const timeoutId = setTimeout(async () => {
@@ -34,14 +58,26 @@ const Search = () => {
     }, [searchQuery]);
 
     useEffect(() => {
-        if (movies?.length > 0 && movies?.[0]) {
-            updateSearchCount(searchQuery, movies[0]);
+        // Only run after component is mounted and for searches with 3+ characters
+        if (mounted && movies && movies.length > 0 && movies[0] && searchQuery.trim().length >= 3) {
+            const timeoutId = setTimeout(() => {
+                updateSearchCount(searchQuery, movies[0]).catch(error => {
+                    console.error('Failed to update search count:', error);
+                });
+            }, 500);
+            
+            return () => clearTimeout(timeoutId);
         }
-    }, [movies]);
+    }, [mounted, movies, searchQuery]);
 
     return (
         <View className="flex-1 bg-primary">
-            <Image source={images.bg} className="flex-1 absolute w-full z-0" resizeMode="cover" />
+            <Image 
+                source={images.bg} 
+                className="absolute w-full h-full z-0 bg-image-mobile" 
+                resizeMode="cover"
+                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+            />
 
             <FlatList
                 data={movies}
@@ -79,7 +115,7 @@ const Search = () => {
                           </Text>
                       )}
 
-                      {!loading && !error && searchQuery.trim() && movies?.length > 0 && (
+                      {!loading && !error && searchQuery.trim() && movies && movies.length > 0 && (
                           <Text className="text-xl text-white font-bold">
                               Search Results for {' '}
                               <Text className="text-accent">

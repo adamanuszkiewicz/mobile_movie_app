@@ -18,7 +18,7 @@ export const MobileViewport: React.FC<MobileViewportProps> = ({ children }) => {
     return (
       <View style={{ 
         flex: 1,
-        backgroundColor: '#ffffff' 
+        backgroundColor: '#000000' 
       }}>
         {children}
       </View>
@@ -72,7 +72,7 @@ export const MobileViewport: React.FC<MobileViewportProps> = ({ children }) => {
           {/* App Content */}
           <View style={{
             flex: 1,
-            backgroundColor: '#ffffff',
+            backgroundColor: '#000000',
             paddingTop: 24, // Account for notch
           }}>
             {children}

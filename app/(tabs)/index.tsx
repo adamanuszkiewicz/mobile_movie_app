@@ -1,45 +1,84 @@
-import {ActivityIndicator, FlatList, Image, ScrollView, Text, View} from "react-native";
+import {ActivityIndicator, FlatList, Image, ScrollView, Text, View, Pressable} from "react-native";
 import {useRouter} from "expo-router"
+import {useFocusEffect} from "@react-navigation/native";
 import {images} from "@/constants/images";
 import {icons} from "@/constants/icons";
 import SearchBar from "@/components/SearchBar";
-import useFetch from "@/services/useFetch";
-import {fetchMovies} from "@/services/api";
+import {fetchMovies, testTMDBConnection} from "@/services/api";
 import MovieCard from "@/components/MovieCard";
 import {getTrendingMovies} from "@/services/appwrite";
 import TrendingCard from "@/components/TrendingCard";
+import {useEffect, useState, useCallback} from "react";
 
 export default function Index() {
     const router = useRouter();
+    
+    // Manual state management instead of useFetch
+    const [trendingMovies, setTrendingMovies] = useState<any[] | null>(null);
+    const [trendingLoading, setTrendingLoading] = useState(true);
+    const [trendingError, setTrendingError] = useState<Error | null>(null);
+    
+    const [movies, setMovies] = useState<any[] | null>(null);
+    const [moviesLoading, setMoviesLoading] = useState(true);
+    const [moviesError, setMoviesError] = useState<Error | null>(null);
 
-    const {
-        data: trendingMovies,
-        loading: trendingLoading,
-        error: trendingError
-    } = useFetch(getTrendingMovies);
+    // Function to refresh trending movies
+    const refreshTrendingMovies = useCallback(async () => {
+        try {
+            setTrendingLoading(true);
+            const trendingData = await getTrendingMovies();
+            setTrendingMovies(trendingData || []);
+        } catch (error) {
+            setTrendingError(error as Error);
+        } finally {
+            setTrendingLoading(false);
+        }
+    }, []);
 
-    const {
-        data: movies,
-        loading: moviesLoading,
-        error: moviesError
-    } = useFetch(() => fetchMovies({
-        query: ''
-    }))
+    // Refresh trending movies when tab becomes focused
+    useFocusEffect(
+        useCallback(() => {
+            refreshTrendingMovies();
+        }, [refreshTrendingMovies])
+    );
 
-    // Debug logging
-    console.log('Trending Movies Debug:', {
-        trendingMovies,
-        trendingLoading,
-        trendingError: trendingError?.message,
-        arrayLength: trendingMovies?.length
-    });
+    // Test API connection and fetch initial data on component mount
+    useEffect(() => {
+        const loadInitialData = async () => {
+            // Test TMDB connection
+            const isConnected = await testTMDBConnection();
+            
+            if (isConnected) {
+                // Fetch movies (only once on mount)
+                try {
+                    setMoviesLoading(true);
+                    const moviesData = await fetchMovies({ query: '' });
+                    setMovies(moviesData);
+                } catch (error) {
+                    setMoviesError(error as Error);
+                } finally {
+                    setMoviesLoading(false);
+                }
+            } else {
+                setMoviesError(new Error('API connection failed'));
+                setMoviesLoading(false);
+            }
+        };
+        
+        loadInitialData();
+    }, []);
 
-  return (
-    <View className="flex-1 bg-primary">
-        <Image source={images.bg} className="absolute w-full z-0 "/>
-        <ScrollView className="flex-1 px-5"
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ minHeight: "100%", paddingBottom: 20 }}>
+    return (
+        <View className="flex-1 bg-primary">
+            <Image 
+                source={images.bg} 
+                className="absolute w-full h-full z-0 bg-image-mobile" 
+                resizeMode="cover"
+                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+            />
+            <ScrollView className="flex-1 px-5"
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ minHeight: "100%", paddingBottom: 20 }}>
             <Image source={icons.logo} className="w-12 h-10 mt-20 mb-5 mx-auto"/>
 
             {moviesLoading || trendingLoading ? (
@@ -67,6 +106,7 @@ export default function Index() {
             ) : (
                 <View className="flex-1 mt-5">
                     <SearchBar
+                        onFocus={() => router.push("/search")}
                         onPress={() => router.push("/search")}
                         placeholder="Search for a movie"
                     />
@@ -98,9 +138,11 @@ export default function Index() {
                                  'Database not accessible - please check your connection'}
                             </Text>
                             {!trendingLoading && !trendingError && Array.isArray(trendingMovies) && trendingMovies.length === 0 && (
-                                <Text className="text-gray-400 text-center text-xs">
-                                    Tip: Search for movies to populate trending data
-                                </Text>
+                                <View className="items-center">
+                                    <Text className="text-gray-400 text-center text-xs">
+                                        Search for movies to populate trending data
+                                    </Text>
+                                </View>
                             )}
                         </View>
                     )}

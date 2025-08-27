@@ -7,6 +7,19 @@ export const TMDB_CONFIG = {
     }
 }
 
+// Test API connectivity
+export const testTMDBConnection = async () => {
+    try {
+        const response = await fetch(`${TMDB_CONFIG.BASE_URL}/configuration`, {
+            method: 'GET',
+            headers: TMDB_CONFIG.headers,
+        });
+        return response.ok;
+    } catch (error) {
+        return false;
+    }
+};
+
 export const fetchMovies = async ({ query }: { query: string}) => {
     const endpoint = query
         ? `${TMDB_CONFIG.BASE_URL}/search/movie?query=${encodeURIComponent(query)}`
@@ -18,17 +31,16 @@ export const fetchMovies = async ({ query }: { query: string}) => {
     });
 
     if (!response.ok) {
-        //@ts-ignore
-        throw new Error('failed to fetch movies', response.statusText);
+        throw new Error(`Failed to fetch movies: ${response.status} ${response.statusText}`);
     }
+    
     const data = await response.json();
-
     return data.results;
 }
 
 export const fetchMovieDetails = async (movieId: string): Promise<MovieDetails> => {
     try {
-        const response= await fetch(`${TMDB_CONFIG.BASE_URL}/movie/${movieId}?api_key=${TMDB_CONFIG.API_KEY}`, {
+        const response= await fetch(`${TMDB_CONFIG.BASE_URL}/movie/${movieId}`, {
             method: 'GET',
             headers: TMDB_CONFIG.headers,
         });

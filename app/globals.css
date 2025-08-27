@@ -23,10 +23,10 @@ html, body {
   overflow: hidden;
 }
 
-/* Ensure mobile viewport behavior */
+/* Ensure mobile viewport behavior up to 768px */
 @media (max-width: 768px) {
   html, body {
-    background-color: #ffffff;
+    background-color: #000000;
   }
   
   /* Hide scrollbars on mobile */
@@ -37,6 +37,19 @@ html, body {
   * {
     scrollbar-width: none;
     -ms-overflow-style: none;
+  }
+  
+  /* Ensure background images cover full width on mobile/tablet */
+  .bg-image-mobile {
+    width: 100vw !important;
+    height: 100vh !important;
+    object-fit: cover !important;
+  }
+  
+  /* Remove any top padding/margin that might create white bar */
+  body, #root, #__next {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
   }
 }
 
